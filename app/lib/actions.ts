@@ -29,12 +29,17 @@ export async function createInvoice(formData: FormData) {
     const amountInCents = amount * 100;
     const date = new Date().toISOString().split('T')[0];
 
-    // Insert the invoice into the database.
-    await sql`
-        INSERT INTO invoices (customer_id, amount, status, date)
-        VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
-    `;
+    try {
+        // Insert the invoice into the database.
+        await sql`
+            INSERT INTO invoices (customer_id, amount, status, date)
+            VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+        `;
+    } catch (error) {
+        console.error('Error creating invoice:', error);
+    }
 
+    // redirect would only be reachable if try is successful.
     // Revalidate the path to ensure the new invoice is displayed correctly then redirect.
     // Calling revalidatePath will trigger a new server request and re-render the table.
     revalidatePath('/dashboard/invoices');
@@ -49,11 +54,16 @@ export async function updateInvoice(id: string, formData: FormData) {
     });
     const amountInCents = amount * 100;
 
-    await sql`
-        UPDATE Invoices
-        SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
-        WHERE id = ${id}
-    `
+    // Update the invoice in the database.
+    try {
+        await sql`
+            UPDATE Invoices
+            SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+            WHERE id = ${id}
+        `
+    } catch (error) {
+        console.error('Error updating Invoices:', error);
+    }
 
     // Revalidate the path to ensure the invoice is updated correctly then redirect.
     revalidatePath(`/dashboard/invoices`);
@@ -61,10 +71,15 @@ export async function updateInvoice(id: string, formData: FormData) {
 }
 
 export async function deleteInvoice(id: string) {
-    await sql`
-        DELETE FROM invoices WHERE id = ${id}
-    `;
+    throw new Error('Failed to Delete Invoice');
+    try {
+        await sql`
+            DELETE FROM invoices WHERE id = ${id}
+        `;
 
-    // Revalidate the path to ensure the invoice is removed correctly then redirect.
-    revalidatePath('/dashboard/invoices');
+        // Revalidate the path to ensure the invoice is removed correctly then redirect.
+        revalidatePath('/dashboard/invoices');
+    } catch (error) {
+        console.log('Error deleting Invoices:', error);
+    }
 }
