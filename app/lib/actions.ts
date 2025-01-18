@@ -36,6 +36,7 @@ export async function createInvoice(formData: FormData) {
     `;
 
     // Revalidate the path to ensure the new invoice is displayed correctly then redirect.
+    // Calling revalidatePath will trigger a new server request and re-render the table.
     revalidatePath('/dashboard/invoices');
     redirect('/dashboard/invoices');
 }
@@ -57,4 +58,13 @@ export async function updateInvoice(id: string, formData: FormData) {
     // Revalidate the path to ensure the invoice is updated correctly then redirect.
     revalidatePath(`/dashboard/invoices`);
     redirect(`/dashboard/invoices`);
+}
+
+export async function deleteInvoice(id: string) {
+    await sql`
+        DELETE FROM invoices WHERE id = ${id}
+    `;
+
+    // Revalidate the path to ensure the invoice is removed correctly then redirect.
+    revalidatePath('/dashboard/invoices');
 }
