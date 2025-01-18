@@ -16,6 +16,9 @@ const FormSchema = z.object({
 
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 
+// Use Zod to update the expected types
+const UpdateInvoice = FormSchema.omit({ id: true, date: true });
+
 export async function createInvoice(formData: FormData) {
     // Validate the input data against the schema.
     const { customerId, amount, status } = CreateInvoice.parse({
@@ -35,4 +38,23 @@ export async function createInvoice(formData: FormData) {
     // Revalidate the path to ensure the new invoice is displayed correctly then redirect.
     revalidatePath('/dashboard/invoices');
     redirect('/dashboard/invoices');
+}
+
+export async function updateInvoice(id: string, formData: FormData) {
+    const { customerId, amount, status } = UpdateInvoice.parse({
+        customerId: formData.get('customerId'),
+        amount: formData.get('amount'),
+        status: formData.get('status'),
+    });
+    const amountInCents = amount * 100;
+
+    await sql`
+        UPDATE Invoices
+        SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+        WHERE id = ${id}
+    `
+
+    // Revalidate the path to ensure the invoice is updated correctly then redirect.
+    revalidatePath(`/dashboard/invoices`);
+    redirect(`/dashboard/invoices`);
 }
